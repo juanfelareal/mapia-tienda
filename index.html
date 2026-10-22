@@ -941,7 +941,8 @@ async function geocode(q){
   const url=`${CONFIG.geocoder}?format=jsonv2&addressdetails=1&limit=6&accept-language=es&q=${encodeURIComponent(q)}`;
   const r=await fetch(url,{signal:_geoCtl.signal}); const js=await r.json();
   return js.map(x=>{
-    const a=x.address||{}; const name=x.name||a.city||a.town||a.village||x.display_name.split(',')[0];
+    const a=x.address||{}; const isPlace=['city','town','village','municipality','administrative','boundary','place'].includes(x.addresstype)||x.category==='boundary'||x.category==='place';
+    const name=(isPlace&&(a.city||a.town||a.village||a.municipality))||x.name||x.display_name.split(',')[0];
     const bb=x.boundingbox?x.boundingbox.map(Number):null; let zoom=12;
     if(bb){ const [s,n,w,e]=bb, p1=project(w,n,0), p2=project(e,s,0); const dx=Math.max(1e-9,p2[0]-p1[0]), dy=Math.max(1e-9,p2[1]-p1[1]);
       zoom=Math.log2(Math.min(600/dx, 800/dy)); }

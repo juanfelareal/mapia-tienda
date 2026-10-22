@@ -943,12 +943,13 @@ async function geocode(q){
   return js.map(x=>{
     const a=x.address||{}; const isPlace=['city','town','village','municipality','administrative','boundary','place'].includes(x.addresstype)||x.category==='boundary'||x.category==='place';
     const name=(isPlace&&(a.city||a.town||a.village||a.municipality))||x.name||x.display_name.split(',')[0];
+    const clean=t=>t.replace(/^(perímetro urbano( de)?|cabecera municipal( de)?|casco urbano( de)?|municipio( de)?|distrito( de)?)\s+/i,'').trim();
     const bb=x.boundingbox?x.boundingbox.map(Number):null; let zoom=12;
     if(bb){ const [s,n,w,e]=bb, p1=project(w,n,0), p2=project(e,s,0); const dx=Math.max(1e-9,p2[0]-p1[0]), dy=Math.max(1e-9,p2[1]-p1[1]);
       zoom=Math.log2(Math.min(600/dx, 800/dy)); }
     if(['city','administrative'].includes(x.type)||x.addresstype==='city') zoom=Math.max(zoom,10.8);
     zoom=Math.min(15.5,Math.max(9.5,zoom));
-    return {title:name, subtitle:a.country||'', detail:x.display_name, lat:+x.lat, lng:+x.lon, zoom};
+    return {title:clean(name), subtitle:a.country||'', detail:x.display_name, lat:+x.lat, lng:+x.lon, zoom};
   });
 }
 function bindSearch(root, onPick){

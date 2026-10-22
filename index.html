@@ -1007,13 +1007,19 @@ function initHero(){
     $('#heroCapL').style.opacity=0; $('#heroCapR').style.opacity=0;
     Object.assign(m,cityMap(k,t));
     const slot=hero.inst.maps[0];
-    if(slot.map){ slot.map.flyTo({center:[m.lng,m.lat],zoom:m.zoom+hero.inst.dz(slot.box),duration:3400,curve:1.5,essential:true}); applyTheme(slot.map,THEMES[t]); }
+    if(slot.map){ const map=slot.map, box=slot.box;
+      // ciudades lejanas: fundido (volar mostraría el mundo sin calles); cercanas: vuelo corto
+      const cv=map.getCanvas(); cv.style.transition='opacity .9s ease'; cv.style.opacity=0;
+      box.style.transition='background-color .9s ease'; box.style.backgroundColor=THEMES[t].land;
+      setTimeout(()=>{ hero.inst.internal=true; map.jumpTo({center:[m.lng,m.lat],zoom:m.zoom+hero.inst.dz(box)-.35}); hero.inst.internal=false; applyTheme(map,THEMES[t]);
+        let shown=false; const show=()=>{ if(shown) return; shown=true; cv.style.opacity=1; map.easeTo({zoom:m.zoom+hero.inst.dz(box),duration:5200,easing:x=>1-Math.pow(1-x,3)}); };
+        map.once('idle',show); setTimeout(show,4000); },950); }
     $('#heroArt').className=`art fin-tradicional fr-${f}`;
     setTimeout(()=>{ hero.inst.relayout(); const s=$('#heroPoster svg.ovl'); if(s){ s.classList.add('fade'); requestAnimationFrame(()=>requestAnimationFrame(()=>s.classList.remove('fade'))); }
       $('#heroCapL').textContent=`${m.title} · ${m.subtitle}`; $('#heroCapR').textContent=`${Math.abs(m.lat).toFixed(4)}° ${m.lat>=0?'N':'S'}`;
       $('#heroCapL').style.opacity=1; $('#heroCapR').style.opacity=1; },1900);
   };
-  setInterval(tick,7000);
+  setInterval(tick,7500);
   $('#heroChips').innerHTML=['medellin','cartagena','bogota','nyc','paris','madrid'].map(k=>`<button class="chip" data-city="${k}">${CITIES[k].title}</button>`).join('');
   $('#heroChips').addEventListener('click',e=>{ const b=e.target.closest('[data-city]'); if(!b) return; const d=newDesign('clasico'); d.maps[0]=cityMap(b.dataset.city,'tinta'); openStudio(d); });
   bindSearch($('#heroSearch'),r=>{ const d=newDesign('clasico'); if(r) Object.assign(d.maps[0],{title:r.title,subtitle:r.subtitle,lat:r.lat,lng:r.lng,zoom:r.zoom}); openStudio(d); });
